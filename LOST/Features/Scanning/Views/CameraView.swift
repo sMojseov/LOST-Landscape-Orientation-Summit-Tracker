@@ -16,7 +16,6 @@ struct CameraView: View {
         ZStack {
             if cameraManager.isAuthorized {
                 CameraPreview(session: cameraManager.session)
-                    .ignoresSafeArea()
             } else if cameraManager.isDenied {
                 ZStack {
                     Color.black.ignoresSafeArea()
@@ -38,6 +37,7 @@ class CameraManager: ObservableObject {
     @Published var isAuthorized = false
     @Published var isDenied = false
     let session = AVCaptureSession()
+    private let photoOutput = AVCapturePhotoOutput()
     private let sessionQueue = DispatchQueue(label: "camera.session.queue")
     
     func checkPermission() {
@@ -69,6 +69,11 @@ class CameraManager: ObservableObject {
             
             self.session.beginConfiguration()
             
+            // Set session preset to .photo for 4:3 aspect ratio
+            if self.session.canSetSessionPreset(.photo) {
+                self.session.sessionPreset = .photo
+            }
+            
             guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
                   let videoDeviceInput = try? AVCaptureDeviceInput(device: videoDevice),
                   self.session.canAddInput(videoDeviceInput) else {
@@ -77,6 +82,12 @@ class CameraManager: ObservableObject {
             }
             
             self.session.addInput(videoDeviceInput)
+            
+            // Add photo output
+            if self.session.canAddOutput(self.photoOutput) {
+                self.session.addOutput(self.photoOutput)
+            }
+            
             self.session.commitConfiguration()
             self.session.startRunning()
         }
@@ -89,7 +100,7 @@ struct CameraPreview: UIViewRepresentable {
     func makeUIView(context: Context) -> VideoPreviewView {
         let view = VideoPreviewView()
         view.videoPreviewLayer.session = session
-        view.videoPreviewLayer.videoGravity = .resizeAspectFill
+        view.videoPreviewLayer.videoGravity = .resizeAspect
         return view
     }
     
