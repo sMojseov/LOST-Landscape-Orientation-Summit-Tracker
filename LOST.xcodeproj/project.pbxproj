@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		86FFAAEB2F58D1D80079585C /* MapLibre in Frameworks */ = {isa = PBXBuildFile; productRef = 86FFAAEA2F58D1D80079585C /* MapLibre */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		86FFAAA52F58851A0079585C /* LOST.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LOST.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				86FFAAEB2F58D1D80079585C /* MapLibre in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = LOST;
 			packageProductDependencies = (
+				86FFAAEA2F58D1D80079585C /* MapLibre */,
 			);
 			productName = LOST;
 			productReference = 86FFAAA52F58851A0079585C /* LOST.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = 86FFAA9C2F58851A0079585C;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				86FFAAE92F58D1D80079585C /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 86FFAAA62F58851A0079585C /* Products */;
 			projectDirPath = "";
@@ -177,7 +186,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				INFOPLIST_KEY_NSCameraUsageDescription = "LOST needs camera access for AR terrain scanning.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "LOST uses your location to show your position on the topographic map and track hike progress.";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -234,7 +245,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				INFOPLIST_KEY_NSCameraUsageDescription = "LOST needs camera access for AR terrain scanning.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "LOST uses your location to show your position on the topographic map and track hike progress.";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -251,6 +264,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 39VT9CNT96;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -282,6 +296,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 39VT9CNT96;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -328,6 +343,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		86FFAAE92F58D1D80079585C /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/maplibre/maplibre-gl-native-distribution";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.23.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		86FFAAEA2F58D1D80079585C /* MapLibre */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 86FFAAE92F58D1D80079585C /* XCRemoteSwiftPackageReference "maplibre-gl-native-distribution" */;
+			productName = MapLibre;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 86FFAA9D2F58851A0079585C /* Project object */;
 }
