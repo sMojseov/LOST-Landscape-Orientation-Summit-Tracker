@@ -12,13 +12,20 @@ struct ExploreView: View {
     @Environment(\.colorScheme) var colorScheme
     @State private var searchText = ""
     @State private var isSearching = false
+    @State private var selectedFilter = "All"
+    
+    let filters = ["All", "8000m+", "Nearby", "Saved"]
     
     var filteredMountains: [Mountain] {
-        if searchText.isEmpty {
-            return Mountain.data
-        } else {
-            return Mountain.data.filter { $0.name.lowercased().contains(searchText.lowercased()) }
+        var result = Mountain.data
+        if !searchText.isEmpty {
+            result = result.filter { $0.name.lowercased().contains(searchText.lowercased()) }
         }
+        // Filtering logic placeholder
+        if selectedFilter == "8000m+" {
+            result = result.filter { $0.elevation >= 8000 }
+        }
+        return result
     }
     
     var body: some View {
@@ -27,34 +34,41 @@ struct ExploreView: View {
             
             VStack(spacing: 0) {
                 // Header & Search Bar
-                VStack(spacing: 16) {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text("INTEL")
-                                .font(.system(size: 12, weight: .black))
-                                .foregroundColor(colorScheme == .dark ? .sageGreen : .deepForest)
-                            Text("EXPLORE PEAKS")
-                                .font(.title2.bold())
-                                .foregroundColor(colorScheme == .dark ? .white : .black)
-                        }
-                        Spacer()
+                VStack(alignment: .leading, spacing: 16) {
+                    // Intel Pill
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(Color.sageGreen)
+                            .frame(width: 4, height: 4)
+                        Text("Intel")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.sageGreen)
                     }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
+                    .background(Capsule().fill(Color.sageGreen.opacity(0.12)))
+                    .overlay(Capsule().stroke(Color.sageGreen.opacity(0.3), lineWidth: 0.5))
                     .padding(.horizontal)
                     .padding(.top)
+                    
+                    Text("Explore peaks")
+                        .font(.title2.bold())
+                        .foregroundColor(colorScheme == .dark ? .white : .black)
+                        .padding(.horizontal)
                     
                     // Search Bar
                     HStack {
                         HStack {
                             Image(systemName: "magnifyingglass")
-                                .foregroundColor(colorScheme == .dark ? .sageGreen : .deepForest)
+                                .foregroundColor(.sageGreen)
                             
-                            TextField("SEARCH MOUNTAINS...", text: $searchText, onEditingChanged: { editing in
+                            TextField("Search mountains...", text: $searchText, onEditingChanged: { editing in
                                 withAnimation {
                                     isSearching = editing
                                 }
                             })
                             .foregroundColor(colorScheme == .dark ? .white : .black)
-                            .font(.system(.body, design: .monospaced))
+                            .font(.body)
                             
                             if !searchText.isEmpty {
                                 Button {
@@ -65,16 +79,13 @@ struct ExploreView: View {
                                 }
                             }
                         }
-                        .padding(12)
-                        .background(colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05))
-                        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                                .stroke(colorScheme == .dark ? Color.sageGreen.opacity(0.3) : Color.earthGold.opacity(0.4), lineWidth: 1)
-                        )
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 14)
+                        .background(colorScheme == .dark ? Color.white.opacity(0.08) : Color.black.opacity(0.04))
+                        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                         
                         if isSearching || !searchText.isEmpty {
-                            Button("EXIT") {
+                            Button("Exit") {
                                 withAnimation {
                                     searchText = ""
                                     isSearching = false
@@ -87,25 +98,49 @@ struct ExploreView: View {
                         }
                     }
                     .padding(.horizontal)
-                    .padding(.bottom)
+                    
+                    // Filter Pills
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(filters, id: \.self) { filter in
+                                Button {
+                                    withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
+                                        selectedFilter = filter
+                                    }
+                                } label: {
+                                    Text(filter)
+                                        .font(.system(size: 13, weight: selectedFilter == filter ? .semibold : .medium))
+                                        .padding(.horizontal, 14)
+                                        .padding(.vertical, 8)
+                                        .background(selectedFilter == filter ? Color.sageGreen.opacity(0.15) : Color.white.opacity(0.06))
+                                        .foregroundColor(selectedFilter == filter ? .sageGreen : .white.opacity(0.5))
+                                        .clipShape(RoundedRectangle(cornerRadius: 20))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 20)
+                                                .stroke(selectedFilter == filter ? Color.sageGreen.opacity(0.4) : Color.white.opacity(0.12), lineWidth: 1)
+                                        )
+                                }
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                    .padding(.bottom, 8)
                 }
-                .background(colorScheme == .dark ? Color.black : Color.earthyBeige)
-                .lostGlassStyle()
-                .padding(.horizontal)
                 .padding(.top)
                 
                 // Results List
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
-                        Text(searchText.isEmpty ? "ALL PEAKS" : "SEARCH RESULTS")
+                        Text(searchText.isEmpty ? "All peaks" : "Search results")
                             .font(.system(size: 10, weight: .bold))
                             .foregroundColor(colorScheme == .dark ? .sageGreen : .deepForest)
                             .padding(.horizontal)
                             .padding(.top)
                         
                         VStack(spacing: 12) {
-                            ForEach(filteredMountains) { mountain in
-                                MountainRow(mountain: mountain) {
+                            let mountains = filteredMountains
+                            ForEach(Array(mountains.enumerated()), id: \.element.id) { index, mountain in
+                                MountainRow(mountain: mountain, isFirst: index == 0 && searchText.isEmpty) {
                                     appState.navigateToMap(with: mountain)
                                 }
                             }
@@ -121,43 +156,56 @@ struct ExploreView: View {
 
 struct MountainRow: View {
     let mountain: Mountain
+    let isFirst: Bool
     let onShowOnMap: () -> Void
     @State private var isExpanded = false
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         VStack(spacing: 0) {
+            if isFirst {
+                Rectangle()
+                    .fill(LinearGradient(gradient: Gradient(colors: [Color.sageGreen.opacity(0.5), .clear]), startPoint: .leading, endPoint: .trailing))
+                    .frame(height: 2)
+            }
+            
             Button {
-                withAnimation(.spring()) {
+                withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
                     isExpanded.toggle()
                 }
             } label: {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(mountain.name.uppercased())
-                            .font(.system(.headline, design: .monospaced))
-                            .fontWeight(.bold)
+                HStack(spacing: 12) {
+                    // Mountain Icon
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color.sageGreen.opacity(0.1))
+                        .frame(width: 32, height: 32)
+                        .overlay(
+                            Image(systemName: "mountain.2.fill")
+                                .font(.system(size: 14))
+                                .foregroundColor(Color.sageGreen.opacity(0.7))
+                        )
+                    
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(mountain.name)
+                            .font(.system(size: 15, weight: .bold))
                             .foregroundColor(colorScheme == .dark ? .white : .black)
                         
-                        HStack {
-                            Text("\(mountain.elevation)M")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(colorScheme == .dark ? .sageGreen : .deepForest)
-                            
-                            Text("•")
-                                .foregroundColor(colorScheme == .dark ? .white.opacity(0.3) : .black.opacity(0.2))
-                            
-                            Text(mountain.country)
-                                .font(.system(size: 12))
-                                .foregroundColor(colorScheme == .dark ? .white.opacity(0.6) : .black.opacity(0.6))
-                        }
+                        Text("\(mountain.country) · \(mountain.range)")
+                            .font(.system(size: 12))
+                            .foregroundColor(.white.opacity(0.4))
                     }
                     
                     Spacer()
                     
-                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .foregroundColor(colorScheme == .dark ? .sageGreen : .deepForest)
-                        .font(.system(size: 14, weight: .bold))
+                    VStack(alignment: .trailing, spacing: 2) {
+                        Text("\(mountain.elevation)M")
+                            .font(.system(size: 13, weight: .bold, design: .monospaced))
+                            .foregroundColor(.sageGreen)
+                        
+                        Text(mountain.country)
+                            .font(.system(size: 11))
+                            .foregroundColor(.white.opacity(0.3))
+                    }
                 }
                 .padding()
                 .background(colorScheme == .dark ? Color.white.opacity(0.05) : Color.black.opacity(0.03))
@@ -165,9 +213,9 @@ struct MountainRow: View {
             
             if isExpanded {
                 VStack(alignment: .leading, spacing: 12) {
-                    Divider().background(colorScheme == .dark ? Color.sageGreen.opacity(0.2) : Color.deepForest.opacity(0.1))
+                    Divider().background(Color.sageGreen.opacity(0.2))
                     
-                    Text("RANGE: \(mountain.range)")
+                    Text("Range: \(mountain.range)")
                         .font(.system(size: 12, design: .monospaced))
                         .foregroundColor(colorScheme == .dark ? .white.opacity(0.8) : .black.opacity(0.7))
                     
@@ -176,7 +224,7 @@ struct MountainRow: View {
                     } label: {
                         HStack {
                             Image(systemName: "map.fill")
-                            Text("VIEW ON TOPO MAP")
+                            Text("View on topo map")
                                 .fontWeight(.bold)
                         }
                         .font(.system(size: 14, design: .monospaced))
@@ -192,10 +240,10 @@ struct MountainRow: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(isExpanded ? (colorScheme == .dark ? Color.sageGreen.opacity(0.5) : Color.deepForest.opacity(0.3)) : (colorScheme == .dark ? Color.white.opacity(0.1) : Color.black.opacity(0.05)), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(isExpanded ? Color.sageGreen.opacity(0.5) : Color.white.opacity(0.1), lineWidth: 1)
         )
     }
 }

@@ -35,12 +35,10 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     private func startAltimeter() {
         if CMAltimeter.isRelativeAltitudeAvailable() {
-            altimeter.startRelativeAltitudeUpdates(to: .main) { [weak self] data, error in
-                if let data = data {
-                    // This is relative altitude, for absolute we use GPS altitude from CLLocation
-                    // But altimeter is more precise for changes.
-                    // We'll prioritize GPS altitude if available, otherwise relative.
-                }
+            altimeter.startRelativeAltitudeUpdates(to: .main) { _, _ in
+                // This is relative altitude, for absolute we use GPS altitude from CLLocation
+                // But altimeter is more precise for changes.
+                // We'll prioritize GPS altitude if available, otherwise relative.
             }
         }
     }

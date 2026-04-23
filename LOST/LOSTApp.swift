@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct LOSTApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var appState = AppState()
     @StateObject private var settingsManager = SettingsManager()
     
