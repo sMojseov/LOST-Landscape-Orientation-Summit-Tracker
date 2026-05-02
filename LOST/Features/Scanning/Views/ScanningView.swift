@@ -19,7 +19,17 @@ struct ScanningView: View {
     @State private var isScanning = false
     @State private var torchOn = false
     @State private var arSceneViewRef: ARSCNView?
+    @State private var showGuideBox = true
+    @State private var guideBoxTimer: Timer? = nil
     @Environment(\.colorScheme) var colorScheme
+
+    private var canCapture: Bool {
+        viewModel.confidenceScore >= 40
+    }
+
+    private var deviceIsLevel: Bool {
+        abs(viewModel.deviceRoll) <= 3.0
+    }
 
     var body: some View {
         GeometryReader { geometry in
@@ -66,11 +76,47 @@ struct ScanningView: View {
                     .position(x: width / 2, y: cameraCenterY)
                 }
 
+                // Peak label overlays — SwiftUI screen-space (replaces SCNText 3D nodes)
+                if isScanning {
+                    let arOffsetY = cameraCenterY - height / 2
+                    ForEach(viewModel.visiblePeaks) { peak in
+                        if let pos = viewModel.peakScreenPositions[peak.mountain.name] {
+                            PeakLabelView(peak: peak, confidence: viewModel.confidenceScore)
+                                .position(x: pos.x, y: pos.y + arOffsetY)
+                        }
+                    }
+                }
+
+                // Horizon alignment guide box
+                if isScanning && showGuideBox {
+                    ZStack(alignment: .top) {
+                        RoundedRectangle(cornerRadius: 8)
+                            .strokeBorder(
+                                Color.sageGreen.opacity(0.75),
+                                style: StrokeStyle(lineWidth: 1.5, dash: [8, 5])
+                            )
+                            .frame(width: width * 0.80, height: height * 0.35)
+
+                        Text("ALIGN PEAKS HERE")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(.sageGreen.opacity(0.9))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Capsule().fill(Color.black.opacity(0.5)))
+                            .offset(y: -12)
+                    }
+                    .position(x: width / 2, y: cameraCenterY)
+                    .allowsHitTesting(false)
+                    .transition(.opacity)
+                    .animation(.easeInOut(duration: 0.5), value: showGuideBox)
+                }
+
                 // Top overlay
                 VStack {
                     HStack {
                         HStack(spacing: 6) {
-                            Text(formatHeading(viewModel.locationService.heading))
+                            Text(viewModel.correctedHeading.map { String(format: "%.0f° ⊕", $0) }
+                                 ?? formatHeading(viewModel.locationService.heading))
                                 .font(.system(size: 13, weight: .bold, design: .monospaced))
                                 .foregroundColor(.white)
                         }
@@ -78,6 +124,22 @@ struct ScanningView: View {
                         .padding(.vertical, 8)
                         .background(Capsule().fill(.ultraThinMaterial).overlay(Color.sageGreen.opacity(0.25)))
                         .overlay(Capsule().stroke(Color.sageGreen.opacity(0.4), lineWidth: 0.5))
+
+                        if isScanning && viewModel.headingIsLocked {
+                            Text("LOCKED")
+                                .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                .foregroundColor(.sageGreen)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.sageGreen.opacity(0.15))
+                                        .overlay(Capsule().stroke(Color.sageGreen.opacity(0.4), lineWidth: 0.5))
+                                )
+                                .scaleEffect(viewModel.justLocked ? 1.15 : 1.0)
+                                .animation(.spring(response: 0.3, dampingFraction: 0.5), value: viewModel.justLocked)
+                                .transition(.scale.combined(with: .opacity))
+                        }
 
                         Spacer()
 
@@ -127,6 +189,7 @@ struct ScanningView: View {
                         .rotationEffect(Angle(degrees: viewModel.visionEngine.horizonAngle != 0
                             ? viewModel.visionEngine.horizonAngle
                             : viewModel.deviceRoll))
+                        .animation(.easeOut(duration: 0.25), value: viewModel.deviceRoll)
                     }
                     .position(x: width / 2, y: cameraCenterY)
                 }
@@ -136,11 +199,16 @@ struct ScanningView: View {
                     HStack(spacing: 12) {
                         HUDGlassCard(label: "Altitude", value: String(format: "%.0fm", viewModel.locationService.altitude))
                         HUDGlassCard(label: "Heading", value: formatHeading(viewModel.locationService.heading))
-                        HUDGlassCard(label: "Confidence", value: isScanning ? String(format: "%.0f%%", viewModel.confidenceScore) : "--")
+                        HUDGlassCard(label: "Confidence", value: isScanning
+                            ? (viewModel.skylineMatchQuality > 0.3
+                                ? "\(Int(viewModel.confidenceScore))% ◈"
+                                : "\(Int(viewModel.confidenceScore))%")
+                            : "--")
                     }
                     .padding(.horizontal, 16)
 
-                    HStack(spacing: 40) {
+                    VStack(spacing: 8) {
+                        HStack(spacing: 40) {
                         // Stop scanning / cancel
                         Button {
                             withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) {
@@ -158,6 +226,7 @@ struct ScanningView: View {
                         // Main shutter: start scan or capture
                         Button {
                             if isScanning {
+                                guard canCapture else { return }
                                 if let arView = arSceneViewRef {
                                     viewModel.capturePhoto(
                                         arView: arView,
@@ -172,13 +241,17 @@ struct ScanningView: View {
                         } label: {
                             ZStack {
                                 Circle()
-                                    .strokeBorder(isScanning ? Color.sageGreen.opacity(0.9) : Color.white.opacity(0.85), lineWidth: 2)
+                                    .strokeBorder(
+                                        isScanning
+                                            ? (canCapture ? Color.sageGreen.opacity(0.9) : Color.white.opacity(0.3))
+                                            : Color.white.opacity(0.85),
+                                        lineWidth: 2
+                                    )
                                     .frame(width: 72, height: 72)
                                 if isScanning {
-                                    // Camera icon when ready to capture
                                     Image(systemName: "camera.fill")
                                         .font(.system(size: 26))
-                                        .foregroundColor(.sageGreen)
+                                        .foregroundColor(canCapture ? .sageGreen : Color.white.opacity(0.3))
                                 } else {
                                     Circle()
                                         .fill(Color.white)
@@ -200,6 +273,15 @@ struct ScanningView: View {
                                 .background(.ultraThinMaterial)
                                 .clipShape(Circle())
                         }
+                        }
+
+                        if isScanning && !canCapture {
+                            Text("Hold steady for a better scan")
+                                .font(.system(size: 11, weight: .medium, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.5))
+                                .transition(.opacity)
+                                .animation(.easeInOut(duration: 0.2), value: canCapture)
+                        }
                     }
                 }
                 .padding(.bottom, 110)
@@ -211,10 +293,42 @@ struct ScanningView: View {
             lockOrientation(.all)
             if torchOn { toggleTorch(on: false) }
         }
-        .sheet(isPresented: $viewModel.showRoadSheet) {
+        .sheet(isPresented: $viewModel.showRoadSheet, onDismiss: {
+            viewModel.photoSaved = false
+            viewModel.photoSaveError = nil
+        }) {
             RoadNavigationSheet(viewModel: viewModel)
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
+        }
+        .onChange(of: isScanning) { _, scanning in
+            if scanning {
+                showGuideBox = true
+                guideBoxTimer?.invalidate()
+                guideBoxTimer = Timer.scheduledTimer(withTimeInterval: 4.0, repeats: false) { _ in
+                    DispatchQueue.main.async {
+                        if deviceIsLevel {
+                            withAnimation { showGuideBox = false }
+                        }
+                    }
+                }
+            } else {
+                guideBoxTimer?.invalidate()
+                showGuideBox = true
+            }
+        }
+        .onChange(of: viewModel.deviceRoll) { _, roll in
+            if isScanning && abs(roll) > 8.0 && !showGuideBox {
+                withAnimation { showGuideBox = true }
+                guideBoxTimer?.invalidate()
+                guideBoxTimer = Timer.scheduledTimer(withTimeInterval: 4.0, repeats: false) { _ in
+                    DispatchQueue.main.async {
+                        if deviceIsLevel {
+                            withAnimation { showGuideBox = false }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -295,12 +409,39 @@ struct RoadNavigationSheet: View {
                 // Header
                 HStack {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("SCAN SAVED")
-                            .font(.system(size: 11, weight: .black))
-                            .foregroundColor(.sageGreen)
-                        Text("Nearest Road")
-                            .font(.title2.bold())
-                            .foregroundColor(.white)
+                        if let err = viewModel.photoSaveError {
+                            Text("SAVE FAILED")
+                                .font(.system(size: 11, weight: .black))
+                                .foregroundColor(.red)
+                            Text(err)
+                                .font(.system(size: 13))
+                                .foregroundColor(.white.opacity(0.7))
+                                .fixedSize(horizontal: false, vertical: true)
+                            Button {
+                                if let url = URL(string: UIApplication.openSettingsURLString) {
+                                    UIApplication.shared.open(url)
+                                }
+                            } label: {
+                                Text("Open Settings")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(.sageGreen)
+                            }
+                            .padding(.top, 2)
+                        } else if viewModel.photoSaved {
+                            Text("SCAN SAVED")
+                                .font(.system(size: 11, weight: .black))
+                                .foregroundColor(.sageGreen)
+                            Text("Nearest Road")
+                                .font(.title2.bold())
+                                .foregroundColor(.white)
+                        } else {
+                            Text("SAVING…")
+                                .font(.system(size: 11, weight: .black))
+                                .foregroundColor(.white.opacity(0.5))
+                            Text("Nearest Road")
+                                .font(.title2.bold())
+                                .foregroundColor(.white)
+                        }
                     }
                     Spacer()
                     if let img = viewModel.capturedImage {
@@ -464,44 +605,29 @@ struct ARSceneView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: ARSCNView, context: Context) {
-        let existingNames = uiView.scene.rootNode.childNodes.compactMap { $0.name }
+        // Ensure all UI operations on ARSCNView are performed on the main thread
+        DispatchQueue.main.async {
+            let existingNames = uiView.scene.rootNode.childNodes.compactMap { $0.name }
 
-        for peak in viewModel.visiblePeaks where !existingNames.contains(peak.mountain.name) {
-            let azRadians = peak.azimuth * .pi / 180
-            let elRadians = peak.elevationAngle * .pi / 180
-            let d: Float = 50.0
-            let x = d * Float(sin(azRadians))
-            let z = -d * Float(cos(azRadians))
-            let y = d * Float(tan(elRadians))
+            for peak in viewModel.visiblePeaks where !existingNames.contains(peak.mountain.name) {
+                let azRadians = peak.azimuth * .pi / 180
+                let elRadians = peak.elevationAngle * .pi / 180
+                let d: Float = 50.0
+                let x = d * Float(sin(azRadians))
+                let z = -d * Float(cos(azRadians))
+                let y = d * Float(tan(elRadians))
 
-            let node = SCNNode()
-            node.name = peak.mountain.name
-            node.position = SCNVector3(x, y, z)
+                let node = SCNNode()
+                node.name = peak.mountain.name
+                node.position = SCNVector3(x, y, z)
+                uiView.scene.rootNode.addChildNode(node)
+            }
 
-            let textGeo = SCNText(string: peak.mountain.name, extrusionDepth: 0.1)
-            textGeo.font = UIFont.systemFont(ofSize: 2, weight: .bold)
-            textGeo.firstMaterial?.diffuse.contents = UIColor.white
-            let textNode = SCNNode(geometry: textGeo)
-            let (min, max) = textNode.boundingBox
-            textNode.position = SCNVector3(-(max.x - min.x) / 2, 0, 0)
-
-            let wrapper = SCNNode()
-            wrapper.addChildNode(textNode)
-
-            let dot = SCNSphere(radius: 0.5)
-            dot.firstMaterial?.diffuse.contents = UIColor.systemGreen
-            let dotNode = SCNNode(geometry: dot)
-            dotNode.position = SCNVector3(0, -2, 0)
-            wrapper.addChildNode(dotNode)
-            wrapper.constraints = [SCNBillboardConstraint()]
-            node.addChildNode(wrapper)
-            uiView.scene.rootNode.addChildNode(node)
-        }
-
-        let visibleNames = viewModel.visiblePeaks.map { $0.mountain.name }
-        for child in uiView.scene.rootNode.childNodes {
-            if let name = child.name, !visibleNames.contains(name) {
-                child.removeFromParentNode()
+            let visibleNames = viewModel.visiblePeaks.map { $0.mountain.name }
+            for child in uiView.scene.rootNode.childNodes {
+                if let name = child.name, !visibleNames.contains(name) {
+                    child.removeFromParentNode()
+                }
             }
         }
     }
@@ -522,6 +648,29 @@ struct ARSceneView: UIViewRepresentable {
             if now - lastProcessTime > 0.1 {
                 parent.viewModel.visionEngine.processFrame(frame.capturedImage)
                 lastProcessTime = now
+            }
+        }
+
+        func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
+            guard let sceneView = renderer as? ARSCNView else { return }
+            
+            // Ensure UI operations like accessing view bounds or projecting points are on the main thread
+            DispatchQueue.main.async {
+                let bounds = sceneView.bounds
+                let margin: CGFloat = 60
+
+                var positions: [String: CGPoint] = [:]
+                for node in sceneView.scene.rootNode.childNodes {
+                    guard let name = node.name else { continue }
+                    let projected = sceneView.projectPoint(node.worldPosition)
+                    // z < 1 means the point is in front of the camera
+                    guard projected.z > 0 && projected.z < 1 else { continue }
+                    let x = min(max(CGFloat(projected.x), margin), bounds.width - margin)
+                    let y = min(max(CGFloat(projected.y), margin), bounds.height - margin)
+                    positions[name] = CGPoint(x: x, y: y)
+                }
+
+                self.parent.viewModel.peakScreenPositions = positions
             }
         }
     }
@@ -548,5 +697,45 @@ struct HUDGlassCard: View {
         .background(.ultraThinMaterial)
         .overlay(Color.sageGreen.opacity(0.08))
         .clipShape(RoundedRectangle(cornerRadius: 14))
+    }
+}
+
+// MARK: - Peak Label (screen-space SwiftUI overlay)
+
+struct PeakLabelView: View {
+    let peak: VisiblePeak
+    let confidence: Double
+
+    private var dotColor: Color {
+        if confidence >= 75 { return .sageGreen }
+        if confidence >= 50 { return .earthGold }
+        return Color.red.opacity(0.7)
+    }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(dotColor)
+                .frame(width: 6, height: 6)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(peak.mountain.name)
+                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white)
+                Text(String(format: "%.0fm · %.1fkm",
+                            Double(peak.mountain.elevation),
+                            peak.distance / 1000))
+                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.7))
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(.ultraThinMaterial)
+        .overlay(Color.sageGreen.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+        .overlay(RoundedRectangle(cornerRadius: 10)
+            .stroke(Color.sageGreen.opacity(0.4), lineWidth: 0.5))
+        .allowsHitTesting(false)
     }
 }

@@ -13,6 +13,16 @@ struct ProfileView: View {
     
     let summits = 42
     
+    private func relativeDateString(_ date: Date) -> String {
+        let calendar = Calendar.current
+        if calendar.isDateInToday(date) { return "Today" }
+        if calendar.isDateInYesterday(date) { return "Yesterday" }
+        let days = abs(calendar.dateComponents([.day], from: date, to: Date()).day ?? 0)
+        if days < 7 { return "\(days) days ago" }
+        if days < 14 { return "Last week" }
+        return "\(days / 7) weeks ago"
+    }
+
     var levelInfo: (name: String, progress: Double, remaining: Int) {
         if summits < 10 {
             return ("Beginner", Double(summits) / 10.0, 10 - summits)
@@ -120,17 +130,31 @@ struct ProfileView: View {
                             }
                         }
                         
-                        // 3. Summit log (last 3 scans)
+                        // 3. Summit log (last 5 scans from persistence)
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Recent scans")
                                 .font(.system(size: 12, weight: .black))
                                 .foregroundColor(colorScheme == .dark ? .sageGreen : .deepForest)
                                 .padding(.horizontal)
-                            
+
                             VStack(spacing: 12) {
-                                ScanRow(name: "Großglockner", location: "Hohe Tauern, Austria", confidence: "94%", date: "Today")
-                                ScanRow(name: "Matterhorn", location: "Pennine Alps, Switzerland", confidence: "87%", date: "2 days ago")
-                                ScanRow(name: "Zugspitze", location: "Wetterstein, Germany", confidence: "91%", date: "Last week")
+                                let records = Array(ScanRecord.loadAll().prefix(5))
+                                if records.isEmpty {
+                                    Text("No scans yet. Start scanning peaks.")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.white.opacity(0.4))
+                                        .frame(maxWidth: .infinity, alignment: .center)
+                                        .padding(.vertical, 16)
+                                } else {
+                                    ForEach(records) { record in
+                                        ScanRow(
+                                            name: record.mountainName,
+                                            location: "\(record.mountainElevation)m elevation",
+                                            confidence: String(format: "%.0f%%", record.confidenceScore),
+                                            date: relativeDateString(record.date)
+                                        )
+                                    }
+                                }
                             }
                             .padding(.horizontal)
                         }

@@ -13,6 +13,7 @@ class AppState: ObservableObject {
         case explore = 2
         case hike = 3
         case profile = 4
+        case stats = 5
     }
     
     func navigateToMap(with mountain: Mountain) {

@@ -20,7 +20,7 @@ class VisionScanEngine: ObservableObject {
             guard let self = self else { return }
             defer { self.isProcessing = false }
 
-            let requestHandler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
+            let requestHandler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: .right, options: [:])
 
             let horizonRequest = VNDetectHorizonRequest { [weak self] request, _ in
                 guard let self = self,

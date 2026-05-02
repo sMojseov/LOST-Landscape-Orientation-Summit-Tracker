@@ -10,14 +10,30 @@
 		86FFAAEB2F58D1D80079585C /* MapLibre in Frameworks */ = {isa = PBXBuildFile; productRef = 86FFAAEA2F58D1D80079585C /* MapLibre */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		FA7B2C3D4E5F0000FA7B2C3D /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 86FFAA9D2F58851A0079585C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 86FFAAA42F58851A0079585C;
+			remoteInfo = LOST;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		86FFAAA52F58851A0079585C /* LOST.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LOST.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FA1B2C3D4E5F0000FA1B2C3D /* LOSTTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LOSTTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		86FFAAA72F58851A0079585C /* LOST */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = LOST;
+			sourceTree = "<group>";
+		};
+		FA2B2C3D4E5F0000FA2B2C3D /* LOSTTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = LOSTTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -31,6 +47,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FA4B2C3D4E5F0000FA4B2C3D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -38,6 +61,7 @@
 			isa = PBXGroup;
 			children = (
 				86FFAAA72F58851A0079585C /* LOST */,
+				FA2B2C3D4E5F0000FA2B2C3D /* LOSTTests */,
 				86FFAAA62F58851A0079585C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -46,6 +70,7 @@
 			isa = PBXGroup;
 			children = (
 				86FFAAA52F58851A0079585C /* LOST.app */,
+				FA1B2C3D4E5F0000FA1B2C3D /* LOSTTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -76,6 +101,27 @@
 			productReference = 86FFAAA52F58851A0079585C /* LOST.app */;
 			productType = "com.apple.product-type.application";
 		};
+		FA6B2C3D4E5F0000FA6B2C3D /* LOSTTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FABB2C3D4E5F0000FABB2C3D /* Build configuration list for PBXNativeTarget "LOSTTests" */;
+			buildPhases = (
+				FA3B2C3D4E5F0000FA3B2C3D /* Sources */,
+				FA4B2C3D4E5F0000FA4B2C3D /* Frameworks */,
+				FA5B2C3D4E5F0000FA5B2C3D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FA8B2C3D4E5F0000FA8B2C3D /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				FA2B2C3D4E5F0000FA2B2C3D /* LOSTTests */,
+			);
+			name = LOSTTests;
+			productName = LOSTTests;
+			productReference = FA1B2C3D4E5F0000FA1B2C3D /* LOSTTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -88,6 +134,10 @@
 				TargetAttributes = {
 					86FFAAA42F58851A0079585C = {
 						CreatedOnToolsVersion = 26.3;
+					};
+					FA6B2C3D4E5F0000FA6B2C3D = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = 86FFAAA42F58851A0079585C;
 					};
 				};
 			};
@@ -109,12 +159,20 @@
 			projectRoot = "";
 			targets = (
 				86FFAAA42F58851A0079585C /* LOST */,
+				FA6B2C3D4E5F0000FA6B2C3D /* LOSTTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		86FFAAA32F58851A0079585C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FA5B2C3D4E5F0000FA5B2C3D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -131,7 +189,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FA3B2C3D4E5F0000FA3B2C3D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		FA8B2C3D4E5F0000FA8B2C3D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 86FFAAA42F58851A0079585C /* LOST */;
+			targetProxy = FA7B2C3D4E5F0000FA7B2C3D /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		86FFAAAE2F58851C0079585C /* Debug */ = {
@@ -273,6 +346,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "LOST needs camera access for AR terrain scanning.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "LOST uses your location to show your position on the topographic map and track hike progress.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Scanning Feature ";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "LOST saves terrain scan images to your photo library.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -307,6 +381,7 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "LOST needs camera access for AR terrain scanning.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "LOST uses your location to show your position on the topographic map and track hike progress.";
 				INFOPLIST_KEY_NSMotionUsageDescription = "Scanning Feature ";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "LOST saves terrain scan images to your photo library.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -329,6 +404,42 @@
 			};
 			name = Release;
 		};
+		FA9B2C3D4E5F0000FA9B2C3D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Thesis.LOSTTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LOST.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LOST";
+			};
+			name = Debug;
+		};
+		FAAB2C3D4E5F0000FAAB2C3D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = Thesis.LOSTTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LOST.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LOST";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -346,6 +457,15 @@
 			buildConfigurations = (
 				86FFAAB12F58851C0079585C /* Debug */,
 				86FFAAB22F58851C0079585C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FABB2C3D4E5F0000FABB2C3D /* Build configuration list for PBXNativeTarget "LOSTTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FA9B2C3D4E5F0000FA9B2C3D /* Debug */,
+				FAAB2C3D4E5F0000FAAB2C3D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

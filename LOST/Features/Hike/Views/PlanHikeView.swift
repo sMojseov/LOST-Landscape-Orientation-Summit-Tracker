@@ -19,6 +19,7 @@ struct PlanHikeView: View {
     @State private var isShowingDatePicker = false
     @State private var mapDownloadState: MapDownloadState = .idle
     @State private var downloadProgress: Double = 0.0
+    @State private var downloadTask: Task<Void, Never>? = nil
     @State private var checklist: [String: Bool] = [
         "DEM data downloaded": false,
         "Emergency contact set": false,
@@ -112,6 +113,9 @@ struct PlanHikeView: View {
                 if let mountain = selectedMountain {
                     weatherService.fetchForecast(latitude: mountain.coordinate.latitude, longitude: mountain.coordinate.longitude, date: date)
                 }
+            }
+            .onDisappear {
+                downloadTask?.cancel()
             }
             .onChange(of: selectedMountain) { _, newMountain in // Updated onChange syntax
                 if let mountain = newMountain {
@@ -242,7 +246,7 @@ struct PlanHikeView: View {
                         
                         if key == "DEM data downloaded" {
                             Button {
-                                // Download TODO
+                                startDEMDownload()
                             } label: {
                                 Text("Download")
                                     .font(.system(size: 11, weight: .bold))
@@ -302,7 +306,8 @@ struct PlanHikeView: View {
                     Text(selectedMountain.map { "\($0.name) Region" } ?? "Select a peak first")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundColor(selectedMountain != nil ? .white : .white.opacity(0.4))
-                    Text(mapDownloadState == .downloaded ? "Map available offline" : "Topographic + trails · ~45 MB")
+                    Text(mapDownloadState == .downloaded ? "Map available offline" :
+                         "SRTM elevation data · ~\(DEMTileManager.requiredTiles(for: selectedMountain?.coordinate ?? CLLocationCoordinate2D()).count * 3) MB")
                         .font(.system(size: 11))
                         .foregroundColor(mapDownloadState == .downloaded ? .sageGreen : .white.opacity(0.4))
                 }
@@ -359,7 +364,7 @@ struct PlanHikeView: View {
         case .idle:
             Button {
                 guard selectedMountain != nil else { return }
-                simulateMapDownload()
+                startDEMDownload()
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "arrow.down.circle")
@@ -376,6 +381,8 @@ struct PlanHikeView: View {
             .disabled(selectedMountain == nil)
         case .downloading:
             Button {
+                downloadTask?.cancel()
+                downloadTask = nil
                 mapDownloadState = .idle
                 downloadProgress = 0
             } label: {
@@ -394,18 +401,29 @@ struct PlanHikeView: View {
         }
     }
 
-    private func simulateMapDownload() {
+    private func startDEMDownload() {
+        guard let mountain = selectedMountain else { return }
         mapDownloadState = .downloading
-        downloadProgress = 0
-        let timer = Timer.scheduledTimer(withTimeInterval: 0.07, repeats: true) { t in
-            downloadProgress += 0.02
-            if downloadProgress >= 1.0 {
-                downloadProgress = 1.0
-                mapDownloadState = .downloaded
-                t.invalidate()
+        downloadProgress = 0.0
+
+        downloadTask = Task {
+            let coordinate = mountain.coordinate
+            let success = await DEMTileManager.shared.downloadTiles(for: coordinate) { progress in
+                Task { @MainActor in
+                    self.downloadProgress = progress
+                }
+            }
+            await MainActor.run {
+                if success {
+                    mapDownloadState = .downloaded
+                    downloadProgress = 1.0
+                    checklist["DEM data downloaded"] = true
+                } else {
+                    mapDownloadState = .idle
+                    downloadProgress = 0.0
+                }
             }
         }
-        RunLoop.main.add(timer, forMode: .common)
     }
 
     // MARK: - Weather Tab

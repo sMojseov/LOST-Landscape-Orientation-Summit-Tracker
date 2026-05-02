@@ -6,24 +6,36 @@
 //
 
 import SwiftUI
+import CoreLocation
 
 struct ExploreView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.colorScheme) var colorScheme
+    @StateObject private var locationManager = LocationManager()
     @State private var searchText = ""
     @State private var isSearching = false
     @State private var selectedFilter = "All"
-    
+    @State var nearbyNote: String = ""
+
     let filters = ["All", "8000m+", "Nearby", "Saved"]
-    
+
     var filteredMountains: [Mountain] {
         var result = Mountain.data
         if !searchText.isEmpty {
             result = result.filter { $0.name.lowercased().contains(searchText.lowercased()) }
         }
-        // Filtering logic placeholder
         if selectedFilter == "8000m+" {
             result = result.filter { $0.elevation >= 8000 }
+        }
+        if selectedFilter == "Nearby" {
+            if let userLocation = locationManager.userLocation {
+                result = Array(result.sorted(by: {
+                    let a = CLLocation(latitude: $0.coordinate.latitude, longitude: $0.coordinate.longitude)
+                    let b = CLLocation(latitude: $1.coordinate.latitude, longitude: $1.coordinate.longitude)
+                    return userLocation.distance(from: a) < userLocation.distance(from: b)
+                }).prefix(8))
+            }
+            // If userLocation is nil, return all (nearbyNote is set via onChange)
         }
         return result
     }
@@ -124,7 +136,15 @@ struct ExploreView: View {
                         }
                         .padding(.horizontal)
                     }
-                    .padding(.bottom, 8)
+
+                    if selectedFilter == "Nearby" && !nearbyNote.isEmpty {
+                        Text(nearbyNote)
+                            .font(.system(size: 11))
+                            .foregroundColor(.white.opacity(0.4))
+                            .padding(.horizontal)
+                    }
+
+                    Spacer().frame(height: 8)
                 }
                 .padding(.top)
                 
@@ -149,6 +169,20 @@ struct ExploreView: View {
                     }
                     .padding(.bottom, 100)
                 }
+            }
+        }
+        .onChange(of: selectedFilter) { _, newFilter in
+            if newFilter == "Nearby" && locationManager.userLocation == nil {
+                nearbyNote = "Location unavailable — showing all mountains"
+            } else {
+                nearbyNote = ""
+            }
+        }
+        .onChange(of: locationManager.userLocation) { _, newLocation in
+            if selectedFilter == "Nearby" {
+                nearbyNote = newLocation == nil
+                    ? "Location unavailable — showing all mountains"
+                    : ""
             }
         }
     }

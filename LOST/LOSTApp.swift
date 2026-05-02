@@ -55,7 +55,15 @@ struct LOSTApp: App {
                     .tabItem {
                         Label("Hike", systemImage: "figure.hiking")
                     }
-                
+
+                StatsView()
+                    .environmentObject(appState)
+                    .environmentObject(settingsManager)
+                    .tag(AppState.Tab.stats.rawValue)
+                    .tabItem {
+                        Label("Stats", systemImage: "chart.bar.fill")
+                    }
+
                 ProfileView()
                     .environmentObject(appState)
                     .environmentObject(settingsManager)
