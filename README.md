@@ -91,4 +91,4 @@ LOST utilizes a bespoke color palette designed for the outdoors:
 
 ---
 
-Created with ❤️ by **Stefan Mojseov**.
+Created by **Stefan Mojseov**.
