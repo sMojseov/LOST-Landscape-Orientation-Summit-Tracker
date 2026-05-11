@@ -1,28 +1,22 @@
 import SwiftUI
 
-struct StatsView: View {
-    @EnvironmentObject var appState: AppState
-    @EnvironmentObject var settingsManager: SettingsManager
-    @Environment(\.colorScheme) var colorScheme
+struct ScanStatistics {
+    let totalScans: Int
+    let uniquePeaks: Int
+    let bestConfidence: Double
+    let daysActive: Int
+    let last6MonthsData: [(label: String, count: Int)]
 
-    private var records: [ScanRecord] { ScanRecord.loadAll() }
+    init(from records: [ScanRecord]) {
+        self.totalScans = records.count
+        self.uniquePeaks = Set(records.map { $0.mountainName }).count
+        self.bestConfidence = records.map { $0.confidenceScore }.max() ?? 0
 
-    private var totalScans: Int { records.count }
-
-    private var uniquePeaks: Int { Set(records.map { $0.mountainName }).count }
-
-    private var bestConfidence: Double { records.map { $0.confidenceScore }.max() ?? 0 }
-
-    private var daysActive: Int {
         let calendar = Calendar.current
-        let days = records.map { calendar.startOfDay(for: $0.date) }
-        return Set(days).count
-    }
+        self.daysActive = Set(records.map { calendar.startOfDay(for: $0.date) }).count
 
-    private var last6MonthsData: [(label: String, count: Int)] {
-        let calendar = Calendar.current
         let now = Date()
-        return (0..<6).reversed().map { offset in
+        self.last6MonthsData = (0..<6).reversed().map { offset in
             guard let monthDate = calendar.date(byAdding: .month, value: -offset, to: now) else {
                 return (label: "—", count: 0)
             }
@@ -35,6 +29,15 @@ struct StatsView: View {
             return (label: label, count: count)
         }
     }
+}
+
+struct StatsView: View {
+    @EnvironmentObject var appState: AppState
+    @EnvironmentObject var settingsManager: SettingsManager
+    @Environment(\.colorScheme) var colorScheme
+
+    @State private var records: [ScanRecord] = []
+    @State private var stats: ScanStatistics?
 
     var body: some View {
         NavigationStack {
@@ -59,6 +62,20 @@ struct StatsView: View {
             .navigationTitle("")
             .navigationBarHidden(true)
         }
+        .task {
+            await loadRecords()
+        }
+    }
+
+    private func loadRecords() async {
+        let loaded = await Task.detached(priority: .userInitiated) {
+            ScanRecord.loadAll()
+        }.value
+        let computed = await Task.detached(priority: .userInitiated) {
+            ScanStatistics(from: loaded)
+        }.value
+        records = loaded
+        stats = computed
     }
 
     // MARK: - Sections
@@ -100,19 +117,19 @@ struct StatsView: View {
                 .padding(.horizontal)
 
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                StatsGridCard(label: "Total Scans", value: "\(totalScans)", icon: "camera.viewfinder")
-                StatsGridCard(label: "Unique Peaks", value: "\(uniquePeaks)", icon: "mountain.2.fill")
+                StatsGridCard(label: "Total Scans", value: "\(stats?.totalScans ?? 0)", icon: "camera.viewfinder")
+                StatsGridCard(label: "Unique Peaks", value: "\(stats?.uniquePeaks ?? 0)", icon: "mountain.2.fill")
                 StatsGridCard(label: "Best Confidence",
-                              value: String(format: "%.0f%%", bestConfidence),
+                              value: String(format: "%.0f%%", stats?.bestConfidence ?? 0),
                               icon: "checkmark.seal.fill")
-                StatsGridCard(label: "Days Active", value: "\(daysActive)", icon: "calendar")
+                StatsGridCard(label: "Days Active", value: "\(stats?.daysActive ?? 0)", icon: "calendar")
             }
             .padding(.horizontal)
         }
     }
 
     private var monthlyChart: some View {
-        let data = last6MonthsData
+        let data = stats?.last6MonthsData ?? []
         let maxCount = max(data.map { $0.count }.max() ?? 1, 1)
 
         return VStack(alignment: .leading, spacing: 12) {

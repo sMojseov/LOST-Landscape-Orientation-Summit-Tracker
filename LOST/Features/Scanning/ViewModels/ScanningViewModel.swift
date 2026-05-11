@@ -32,8 +32,13 @@ class ScanningViewModel: ObservableObject {
     @Published var correctedHeading: Double? = nil
     @Published var skylineMatchQuality: Double = 0.0
     @Published var demIsAvailable: Bool = false
+    @Published var showDEMDownloadPrompt: Bool = false
+    @Published var isDownloadingDEM: Bool = false
+    @Published var demDownloadProgress: Double = 0.0
+    @Published var isSessionActive: Bool = true
 
     private let stabilizationFactor = 0.06
+    private var demPromptShown = false
     private var stableFrameCount: Int = 0
     private let lockThresholdFrames: Int = 60
     private var cancellables = Set<AnyCancellable>()
@@ -47,6 +52,19 @@ class ScanningViewModel: ObservableObject {
         startMotion()
         bindData()
         checkDEMAvailability()
+    }
+
+    func pauseSession() {
+        isSessionActive = false
+        motionManager.stopDeviceMotionUpdates()
+    }
+
+    func resumeSession() {
+        isSessionActive = true
+        if motionManager.isDeviceMotionAvailable {
+            motionManager.deviceMotionUpdateInterval = 1.0 / 30.0
+            motionManager.startDeviceMotionUpdates()
+        }
     }
 
     // MARK: - Capture
@@ -121,6 +139,35 @@ class ScanningViewModel: ObservableObject {
         }
     }
 
+    // MARK: - DEM Download
+
+    func promptDEMDownloadIfNeeded() {
+        guard !demIsAvailable, !demPromptShown else { return }
+        demPromptShown = true
+        showDEMDownloadPrompt = true
+    }
+
+    func downloadDEMTiles() {
+        guard let location = locationService.userLocation else { return }
+        isDownloadingDEM = true
+        demDownloadProgress = 0.0
+
+        Task {
+            let success = await DEMTileManager.shared.downloadTiles(for: location.coordinate) { progress in
+                Task { @MainActor in
+                    self.demDownloadProgress = progress
+                }
+            }
+            await MainActor.run {
+                self.isDownloadingDEM = false
+                if success {
+                    self.demIsAvailable = true
+                    self.loadDEMAndRenderSkyline()
+                }
+            }
+        }
+    }
+
     // MARK: - Private
 
     private func drawContours(on image: UIImage, paths: [[CGPoint]]) -> UIImage {
@@ -183,7 +230,7 @@ class ScanningViewModel: ObservableObject {
 
         motionTimer
             .sink { [weak self] _ in
-                guard let self = self, let motion = self.motionManager.deviceMotion else { return }
+                guard let self = self, self.isSessionActive, let motion = self.motionManager.deviceMotion else { return }
                 let newPitch = motion.attitude.pitch * 180 / .pi
                 let newRoll = motion.attitude.roll * 180 / .pi
                 self.devicePitch = (newPitch * self.stabilizationFactor) + (self.devicePitch * (1 - self.stabilizationFactor))

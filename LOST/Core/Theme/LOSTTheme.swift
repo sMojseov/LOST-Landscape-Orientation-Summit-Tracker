@@ -45,31 +45,4 @@ extension View {
     func lostGlassStyle() -> some View {
         self.modifier(LiquidGlassStyle())
     }
-    
-    func earthyBackground() -> some View {
-        ZStack {
-            if let colorScheme = (Mirror(reflecting: self).descendant("colorScheme") as? EnvironmentValues)?.colorScheme {
-                if colorScheme == .dark {
-                    Color.black.ignoresSafeArea()
-                } else {
-                    Color.earthyBeige.ignoresSafeArea()
-                }
-            } else {
-                // Fallback for when colorScheme isn't directly accessible
-                BackgroundHelper().ignoresSafeArea()
-            }
-            self
-        }
-    }
-}
-
-struct BackgroundHelper: View {
-    @Environment(\.colorScheme) var colorScheme
-    var body: some View {
-        if colorScheme == .dark {
-            Color.black
-        } else {
-            Color.earthyBeige
-        }
-    }
 }

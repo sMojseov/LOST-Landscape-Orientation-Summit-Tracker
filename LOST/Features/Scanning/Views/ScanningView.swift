@@ -15,6 +15,7 @@ import SceneKit
 import MapKit
 
 struct ScanningView: View {
+    @EnvironmentObject var appState: AppState
     @StateObject private var viewModel = ScanningViewModel()
     @State private var isScanning = false
     @State private var torchOn = false
@@ -144,17 +145,34 @@ struct ScanningView: View {
                         Spacer()
 
                         if isScanning {
-                            // Contour count badge
-                            HStack(spacing: 4) {
-                                Circle().fill(Color.sageGreen).frame(width: 6, height: 6)
-                                Text("\(viewModel.visionEngine.contourPaths.count) outlines")
-                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            HStack(spacing: 6) {
+                                // DEM active badge
+                                if viewModel.demIsAvailable {
+                                    HStack(spacing: 3) {
+                                        Image(systemName: "map.fill")
+                                            .font(.system(size: 8))
+                                        Text("DEM")
+                                            .font(.system(size: 9, weight: .black, design: .monospaced))
+                                    }
                                     .foregroundColor(.sageGreen)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 3)
+                                    .background(Capsule().fill(Color.sageGreen.opacity(0.12)))
+                                    .overlay(Capsule().stroke(Color.sageGreen.opacity(0.3), lineWidth: 0.5))
+                                    .transition(.scale.combined(with: .opacity))
+                                }
+                                // Contour count badge
+                                HStack(spacing: 4) {
+                                    Circle().fill(Color.sageGreen).frame(width: 6, height: 6)
+                                    Text("\(viewModel.visionEngine.contourPaths.count) outlines")
+                                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                                        .foregroundColor(.sageGreen)
+                                }
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(Capsule().fill(.ultraThinMaterial).overlay(Color.sageGreen.opacity(0.12)))
+                                .overlay(Capsule().stroke(Color.sageGreen.opacity(0.3), lineWidth: 0.5))
                             }
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(Capsule().fill(.ultraThinMaterial).overlay(Color.sageGreen.opacity(0.12)))
-                            .overlay(Capsule().stroke(Color.sageGreen.opacity(0.3), lineWidth: 0.5))
                         } else {
                             Text("4:3")
                                 .font(.system(size: 11, weight: .bold, design: .monospaced))
@@ -206,6 +224,24 @@ struct ScanningView: View {
                             : "--")
                     }
                     .padding(.horizontal, 16)
+
+                    if isScanning && !viewModel.demIsAvailable && !viewModel.isDownloadingDEM {
+                        Button { viewModel.showDEMDownloadPrompt = true } label: {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.down.circle")
+                                    .font(.system(size: 10, weight: .bold))
+                                Text("ENHANCE · Download terrain")
+                                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            }
+                            .foregroundColor(.sageGreen.opacity(0.7))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Capsule().fill(.ultraThinMaterial).overlay(Color.sageGreen.opacity(0.08)))
+                            .overlay(Capsule().stroke(Color.sageGreen.opacity(0.25), lineWidth: 0.5))
+                        }
+                        .padding(.horizontal, 16)
+                        .transition(.opacity)
+                    }
 
                     VStack(spacing: 8) {
                         HStack(spacing: 40) {
@@ -286,6 +322,28 @@ struct ScanningView: View {
                 }
                 .padding(.bottom, 110)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+
+                // DEM download progress overlay
+                if viewModel.isDownloadingDEM {
+                    VStack(spacing: 12) {
+                        Text("DOWNLOADING TERRAIN")
+                            .font(.system(size: 10, weight: .black, design: .monospaced))
+                            .foregroundColor(.sageGreen)
+                        ProgressView(value: viewModel.demDownloadProgress)
+                            .tint(.sageGreen)
+                            .frame(width: 200)
+                            .animation(.linear, value: viewModel.demDownloadProgress)
+                        Text("\(Int(viewModel.demDownloadProgress * 100))%")
+                            .font(.system(size: 12, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white)
+                    }
+                    .padding(20)
+                    .background(.ultraThinMaterial)
+                    .overlay(Color.sageGreen.opacity(0.05))
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.sageGreen.opacity(0.3), lineWidth: 1))
+                    .transition(.scale.combined(with: .opacity))
+                }
             }
         }
         .onAppear { lockOrientation(.portrait) }
@@ -329,6 +387,33 @@ struct ScanningView: View {
                     }
                 }
             }
+        }
+        .onChange(of: isScanning) { _, scanning in
+            if scanning { viewModel.promptDEMDownloadIfNeeded() }
+        }
+        .onChange(of: appState.selectedTab) { _, newTab in
+            let onScanTab = newTab == AppState.Tab.scan.rawValue
+            if onScanTab {
+                viewModel.resumeSession()
+                if let arView = arSceneViewRef {
+                    let config = ARWorldTrackingConfiguration()
+                    config.worldAlignment = .gravityAndHeading
+                    arView.session.run(config)
+                }
+            } else {
+                viewModel.pauseSession()
+                arSceneViewRef?.session.pause()
+                if torchOn {
+                    torchOn = false
+                    toggleTorch(on: false)
+                }
+            }
+        }
+        .alert("Terrain Matching", isPresented: $viewModel.showDEMDownloadPrompt) {
+            Button("Download") { viewModel.downloadDEMTiles() }
+            Button("Not Now", role: .cancel) { }
+        } message: {
+            Text("Download SRTM elevation data to enable skyline-based heading correction. Improves peak identification accuracy in mountainous terrain.")
         }
     }
 
@@ -644,6 +729,7 @@ struct ARSceneView: UIViewRepresentable {
         }
 
         func session(_ session: ARSession, didUpdate frame: ARFrame) {
+            guard parent.viewModel.isSessionActive else { return }
             let now = CACurrentMediaTime()
             if now - lastProcessTime > 0.1 {
                 parent.viewModel.visionEngine.processFrame(frame.capturedImage)

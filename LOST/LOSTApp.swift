@@ -14,6 +14,8 @@ struct LOSTApp: App {
     @StateObject private var settingsManager = SettingsManager()
     
     init() {
+        WatchConnectivityManager.shared.activate()
+
         // Standard TabBar customization for visibility
         let appearance = UITabBarAppearance()
         appearance.configureWithTransparentBackground()

@@ -20,12 +20,18 @@ struct PlanHikeView: View {
     @State private var mapDownloadState: MapDownloadState = .idle
     @State private var downloadProgress: Double = 0.0
     @State private var downloadTask: Task<Void, Never>? = nil
-    @State private var checklist: [String: Bool] = [
-        "DEM data downloaded": false,
-        "Emergency contact set": false,
-        "Weather checked": false,
-        "Map reviewed": false
-    ]
+    @AppStorage("emergency_contact_name") private var emergencyContactName: String = ""
+    @State private var isDEMAvailable: Bool = false
+
+    private var checklistStatus: [(String, Bool)] {
+        guard let mountain = selectedMountain else { return [] }
+        return [
+            ("Emergency contact set", !emergencyContactName.isEmpty),
+            ("DEM data downloaded", isDEMAvailable),
+            ("Weather checked", weatherService.hasLoadedWeather),
+            ("Route reviewed", !mountain.waypoints.isEmpty)
+        ]
+    }
     
     let tabs = ["Plan", "Weather", "Route"]
     
@@ -117,9 +123,14 @@ struct PlanHikeView: View {
             .onDisappear {
                 downloadTask?.cancel()
             }
-            .onChange(of: selectedMountain) { _, newMountain in // Updated onChange syntax
+            .onChange(of: selectedMountain) { _, newMountain in
                 if let mountain = newMountain {
                     weatherService.fetchForecast(latitude: mountain.coordinate.latitude, longitude: mountain.coordinate.longitude, date: date)
+                    Task {
+                        isDEMAvailable = await DEMTileManager.shared.areAllTilesDownloaded(for: mountain.coordinate)
+                    }
+                } else {
+                    isDEMAvailable = false
                 }
             }
             .onChange(of: date) { _, newDate in // Updated onChange syntax
@@ -180,7 +191,9 @@ struct PlanHikeView: View {
             if let mountain = selectedMountain {
                 let distance = Double(mountain.elevation - 1000) / 400.0 + 8.0
                 let ascent = mountain.elevation - 1000
-                let estMinutes = (ascent / 400 * 60) + Int(distance / 4.0 * 60)
+                let ascentMinutes = Int(Double(ascent) / 400.0 * 60.0)
+                let distanceMinutes = Int(distance / 4.0 * 60.0)
+                let estMinutes = ascentMinutes + distanceMinutes
                 let hours = estMinutes / 60
                 let minutes = estMinutes % 60
                 
@@ -227,38 +240,20 @@ struct PlanHikeView: View {
             // Section E — Pre-departure checklist
             SectionHeader(title: "Pre-departure checklist")
             VStack(spacing: 12) {
-                ForEach(checklist.keys.sorted(), id: \.self) { key in
+                ForEach(checklistStatus, id: \.0) { item, isComplete in
                     HStack {
-                        Button {
-                            checklist[key]?.toggle()
-                        } label: {
-                            Image(systemName: checklist[key] == true ? "checkmark.circle.fill" : "circle")
-                                .font(.system(size: 20))
-                                .foregroundColor(checklist[key] == true ? .sageGreen : .white.opacity(0.2))
-                        }
-                        
-                        Text(key)
+                        Image(systemName: isComplete ? "checkmark.circle.fill" : "circle")
+                            .font(.system(size: 20))
+                            .foregroundColor(isComplete ? .sageGreen : .white.opacity(0.2))
+
+                        Text(item)
                             .font(.system(size: 14))
-                            .foregroundColor(checklist[key] == true ? .white.opacity(0.4) : .white)
-                            .strikethrough(checklist[key] == true)
-                        
+                            .foregroundColor(isComplete ? .white.opacity(0.4) : .white)
+                            .strikethrough(isComplete)
+
                         Spacer()
-                        
-                        if key == "DEM data downloaded" {
-                            Button {
-                                startDEMDownload()
-                            } label: {
-                                Text("Download")
-                                    .font(.system(size: 11, weight: .bold))
-                                    .foregroundColor(.sageGreen)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.sageGreen.opacity(0.1))
-                                    .clipShape(Capsule())
-                            }
-                        }
                     }
-                    if key != checklist.keys.sorted().last {
+                    if item != checklistStatus.last?.0 {
                         Divider().background(Color.white.opacity(0.05))
                     }
                 }
@@ -417,7 +412,7 @@ struct PlanHikeView: View {
                 if success {
                     mapDownloadState = .downloaded
                     downloadProgress = 1.0
-                    checklist["DEM data downloaded"] = true
+                    isDEMAvailable = true
                 } else {
                     mapDownloadState = .idle
                     downloadProgress = 0.0

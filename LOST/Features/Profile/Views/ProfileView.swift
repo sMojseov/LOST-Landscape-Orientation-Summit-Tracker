@@ -11,7 +11,15 @@ struct ProfileView: View {
     @EnvironmentObject var settingsManager: SettingsManager
     @Environment(\.colorScheme) var colorScheme
     
-    let summits = 42
+    @State private var scanRecords: [ScanRecord] = []
+
+    private var summits: Int { scanRecords.count }
+    private var uniquePeaks: Int { Set(scanRecords.map { $0.mountainName }).count }
+    private var bestConfidence: Double { scanRecords.map { $0.confidenceScore }.max() ?? 0 }
+    private var daysActive: Int {
+        let calendar = Calendar.current
+        return Set(scanRecords.map { calendar.startOfDay(for: $0.date) }).count
+    }
     
     private func relativeDateString(_ date: Date) -> String {
         let calendar = Calendar.current
@@ -70,9 +78,9 @@ struct ProfileView: View {
                         // Stats Grid
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                             StatCard(label: "SUMMITS IDENTIFIED", value: "\(summits)", icon: "mountain.2.fill")
-                            StatCard(label: "GPS-DENIED DISTANCE", value: "124km", icon: "location.slash.fill")
-                            StatCard(label: "TOTAL ASCENT", value: "12,450m", icon: "arrow.up.right")
-                            StatCard(label: "EXPEDITIONS", value: "15", icon: "tent.fill")
+                            StatCard(label: "UNIQUE PEAKS", value: "\(uniquePeaks)", icon: "flag.fill")
+                            StatCard(label: "BEST CONFIDENCE", value: summits > 0 ? String(format: "%.0f%%", bestConfidence) : "—", icon: "checkmark.seal.fill")
+                            StatCard(label: "DAYS ACTIVE", value: "\(daysActive)", icon: "calendar")
                         }
                         .padding(.horizontal)
                         
@@ -198,6 +206,7 @@ struct ProfileView: View {
             .navigationTitle("")
             .navigationBarHidden(true)
         }
+        .onAppear { scanRecords = ScanRecord.loadAll() }
     }
 }
 

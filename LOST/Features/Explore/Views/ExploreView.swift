@@ -17,15 +17,15 @@ struct ExploreView: View {
     @State private var selectedFilter = "All"
     @State var nearbyNote: String = ""
 
-    let filters = ["All", "8000m+", "Nearby", "Saved"]
+    let filters = ["All", "4000m+", "Nearby", "Saved"]
 
     var filteredMountains: [Mountain] {
         var result = Mountain.data
         if !searchText.isEmpty {
             result = result.filter { $0.name.lowercased().contains(searchText.lowercased()) }
         }
-        if selectedFilter == "8000m+" {
-            result = result.filter { $0.elevation >= 8000 }
+        if selectedFilter == "4000m+" {
+            result = result.filter { $0.elevation >= 4000 }
         }
         if selectedFilter == "Nearby" {
             if let userLocation = locationManager.userLocation {

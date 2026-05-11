@@ -44,6 +44,7 @@ class HikeWeatherService: ObservableObject {
     @Published var forecast: SummitForecast?
     @Published var isLoading = false
     @Published var error: String?
+    @Published var hasLoadedWeather: Bool = false
 
     func fetchForecast(latitude: Double, longitude: Double, date: Date) {
         isLoading = true
@@ -128,6 +129,7 @@ class HikeWeatherService: ObservableObject {
                     default: visKm = 8
                     }
 
+                    self?.hasLoadedWeather = true
                     self?.forecast = SummitForecast(
                         tempMin: Int(tempMin ?? -99),
                         tempMax: Int(tempMax ?? -99),

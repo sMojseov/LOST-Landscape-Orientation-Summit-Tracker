@@ -27,6 +27,8 @@ struct TopoMapView: View {
     @State private var centerCoordinate = CLLocationCoordinate2D(latitude: 45.9765, longitude: 7.6585)
     @State private var isMapLoaded = false
     @State private var followUser = false
+    @State private var cameraUpdateTask: Task<Void, Never>?
+    @State private var routeCoordinates: [CLLocationCoordinate2D] = []
     
     var body: some View {
         ZStack(alignment: .top) {
@@ -50,7 +52,7 @@ struct TopoMapView: View {
                                         Circle().stroke(Color.white, lineWidth: 2)
                                     )
                                     .shadow(radius: 4)
-                                
+
                                 Image(systemName: "triangle.fill")
                                     .resizable()
                                     .frame(width: 10, height: 10)
@@ -60,7 +62,20 @@ struct TopoMapView: View {
                             }
                         }
                     }
-                    
+
+                    if let mountain = appState.selectedMountain, !mountain.waypoints.isEmpty {
+                        ForEach(Array(mountain.waypoints.enumerated()), id: \.element.id) { index, waypoint in
+                            Annotation("", coordinate: waypoint.coordinate) {
+                                WaypointMarker(number: index + 1)
+                            }
+                        }
+                    }
+
+                    if routeCoordinates.count >= 2 {
+                        MapPolyline(coordinates: routeCoordinates)
+                            .stroke(.blue, style: StrokeStyle(lineWidth: 3, dash: [8, 4]))
+                    }
+
                     if let region = appState.selectedRegion {
                         MapPolygon(coordinates: region.areaCoords)
                             .foregroundStyle((colorScheme == .dark ? Color.sageGreen : Color.deepForest).opacity(0.15))
@@ -69,7 +84,13 @@ struct TopoMapView: View {
                 }
                 .mapStyle(.hybrid(elevation: .realistic))
                 .onMapCameraChange { context in
-                    centerCoordinate = context.camera.centerCoordinate
+                    let newCenter = context.camera.centerCoordinate
+                    cameraUpdateTask?.cancel()
+                    cameraUpdateTask = Task {
+                        try? await Task.sleep(for: .milliseconds(200))
+                        guard !Task.isCancelled else { return }
+                        centerCoordinate = newCenter
+                    }
                 }
                 .ignoresSafeArea()
                 .transition(.opacity)
@@ -162,16 +183,15 @@ struct TopoMapView: View {
                 }
             }
         }
-        .onAppear {
-            // Delay map loading to prevent race conditions during view transitions
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                withAnimation {
-                    isMapLoaded = true
-                }
+        .task {
+            try? await Task.sleep(for: .milliseconds(200))
+            withAnimation {
+                isMapLoaded = true
             }
         }
         .onChange(of: appState.selectedMountain) { oldMountain, newMountain in
             if let mountain = newMountain {
+                routeCoordinates = mountain.waypoints.map { $0.coordinate }
                 followUser = false
                 withAnimation(.spring()) {
                     cameraPosition = .camera(
@@ -183,6 +203,8 @@ struct TopoMapView: View {
                         )
                     )
                 }
+            } else {
+                routeCoordinates = []
             }
         }
         .onChange(of: appState.selectedRegion) { oldRegion, newRegion in
@@ -200,6 +222,18 @@ struct TopoMapView: View {
                 }
             }
         }
+    }
+}
+
+private struct WaypointMarker: View {
+    let number: Int
+
+    var body: some View {
+        ZStack {
+            Circle().fill(Color.blue).frame(width: 28, height: 28)
+            Text("\(number)").font(.caption.weight(.bold)).foregroundColor(.white)
+        }
+        .shadow(radius: 3)
     }
 }
 

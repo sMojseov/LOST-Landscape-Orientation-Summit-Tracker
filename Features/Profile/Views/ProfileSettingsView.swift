@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ProfileSettingsView: View {
     @EnvironmentObject var settingsManager: SettingsManager
+    @ObservedObject private var watchManager = WatchConnectivityManager.shared
     @Environment(\.dismiss) var dismiss
     @Environment(\.colorScheme) var colorScheme
     
@@ -114,12 +115,57 @@ struct ProfileSettingsView: View {
                             .font(.system(size: 10, weight: .black))
                             .foregroundColor(colorScheme == .dark ? .white.opacity(0.4) : .black.opacity(0.4))
                     }
+
+                    Section {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("APPLE WATCH")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundColor(colorScheme == .dark ? .sageGreen : .deepForest)
+                                Text(watchManager.connectionStatus)
+                                    .font(.system(size: 10, weight: .black, design: .monospaced))
+                                    .foregroundColor(watchStatusColor)
+                            }
+                            Spacer()
+                            Button {
+                                watchManager.activate()
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: watchManager.isReachable ? "applewatch.radiowaves.left.and.right" : "applewatch")
+                                        .font(.system(size: 14, weight: .bold))
+                                    Text(watchManager.isSessionActive ? "REFRESH" : "CONNECT")
+                                        .font(.system(size: 11, weight: .black, design: .monospaced))
+                                }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 7)
+                                .background(colorScheme == .dark ? Color.sageGreen : Color.deepForest)
+                                .cornerRadius(8)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    } header: {
+                        Text("CONNECTED DEVICES")
+                            .font(.system(size: 10, weight: .black))
+                            .foregroundColor(colorScheme == .dark ? .white.opacity(0.4) : .black.opacity(0.4))
+                    }
+                    .listRowBackground(colorScheme == .dark ? Color.white.opacity(0.05) : Color.white.opacity(0.5))
                 }
                 .scrollContentBackground(.hidden)
                 .listStyle(.insetGrouped)
             }
         }
         .navigationBarHidden(true)
+        .onAppear { watchManager.activate() }
+    }
+
+    private var watchStatusColor: Color {
+        switch watchManager.connectionStatus {
+        case "CONNECTED": return .green
+        case "PAIRED": return colorScheme == .dark ? .sageGreen : .deepForest
+        case "NO WATCH PAIRED", "INACTIVE": return .orange
+        default: return .gray
+        }
     }
 }
 
