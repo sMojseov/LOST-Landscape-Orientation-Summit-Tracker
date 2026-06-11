@@ -690,29 +690,26 @@ struct ARSceneView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: ARSCNView, context: Context) {
-        // Ensure all UI operations on ARSCNView are performed on the main thread
-        DispatchQueue.main.async {
-            let existingNames = uiView.scene.rootNode.childNodes.compactMap { $0.name }
+        let existingNames = uiView.scene.rootNode.childNodes.compactMap { $0.name }
 
-            for peak in viewModel.visiblePeaks where !existingNames.contains(peak.mountain.name) {
-                let azRadians = peak.azimuth * .pi / 180
-                let elRadians = peak.elevationAngle * .pi / 180
-                let d: Float = 50.0
-                let x = d * Float(sin(azRadians))
-                let z = -d * Float(cos(azRadians))
-                let y = d * Float(tan(elRadians))
+        for peak in viewModel.visiblePeaks where !existingNames.contains(peak.mountain.name) {
+            let azRadians = peak.azimuth * .pi / 180
+            let elRadians = peak.elevationAngle * .pi / 180
+            let d: Float = 50.0
+            let x = d * Float(sin(azRadians))
+            let z = -d * Float(cos(azRadians))
+            let y = d * Float(tan(elRadians))
 
-                let node = SCNNode()
-                node.name = peak.mountain.name
-                node.position = SCNVector3(x, y, z)
-                uiView.scene.rootNode.addChildNode(node)
-            }
+            let node = SCNNode()
+            node.name = peak.mountain.name
+            node.position = SCNVector3(x, y, z)
+            uiView.scene.rootNode.addChildNode(node)
+        }
 
-            let visibleNames = viewModel.visiblePeaks.map { $0.mountain.name }
-            for child in uiView.scene.rootNode.childNodes {
-                if let name = child.name, !visibleNames.contains(name) {
-                    child.removeFromParentNode()
-                }
+        let visibleNames = viewModel.visiblePeaks.map { $0.mountain.name }
+        for child in uiView.scene.rootNode.childNodes {
+            if let name = child.name, !visibleNames.contains(name) {
+                child.removeFromParentNode()
             }
         }
     }

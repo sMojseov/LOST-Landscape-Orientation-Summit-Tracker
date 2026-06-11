@@ -47,7 +47,10 @@ class PeakFinderService {
             
             let azimuth = calculateAzimuth(from: userLocation.coordinate, to: mountain.coordinate)
             let heightDifference = Double(mountain.elevation) - userLocation.altitude
-            let elevationAngle = atan2(heightDifference, distance) * 180 / .pi
+            // Apply Earth curvature correction: at 80 km this is ~784 m and cannot be ignored
+            let curveCorrection = (distance * distance) / (2.0 * 6_371_000.0)
+            let correctedDiff = heightDifference - curveCorrection
+            let elevationAngle = atan2(correctedDiff, distance) * 180 / .pi
             
             visiblePeaks.append(VisiblePeak(
                 mountain: mountain,

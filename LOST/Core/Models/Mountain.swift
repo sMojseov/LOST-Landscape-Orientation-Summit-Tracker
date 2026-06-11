@@ -43,10 +43,55 @@ extension Mountain {
                 Waypoint(name: "Zugspitze Summit", coordinate: CLLocationCoordinate2D(latitude: 47.4211, longitude: 10.9848), elevation: 2962, distanceFromStart: 9.1, estimatedMinutesFromStart: 260, isSummit: true)
             ]
         ),
-        Mountain(name: "Watzmann", elevation: 2713, range: "Berchtesgaden Alps", country: "Germany", coordinate: CLLocationCoordinate2D(latitude: 47.5539, longitude: 12.9222)),
-        Mountain(name: "Hochwanner", elevation: 2744, range: "Wetterstein Mountains", country: "Germany", coordinate: CLLocationCoordinate2D(latitude: 47.3942, longitude: 11.0475)),
-        Mountain(name: "Leutascher Dreitorspitze", elevation: 2682, range: "Wetterstein Mountains", country: "Germany", coordinate: CLLocationCoordinate2D(latitude: 47.4103, longitude: 11.0506)),
-        Mountain(name: "Hochfrottspitze", elevation: 2649, range: "Allgäu Alps", country: "Germany", coordinate: CLLocationCoordinate2D(latitude: 47.3000, longitude: 10.2786)),
+        Mountain(
+            name: "Watzmann",
+            elevation: 2713,
+            range: "Berchtesgaden Alps",
+            country: "Germany",
+            coordinate: CLLocationCoordinate2D(latitude: 47.5539, longitude: 12.9222),
+            waypoints: [
+                Waypoint(name: "Trailhead - Ramsau bei Berchtesgaden", coordinate: CLLocationCoordinate2D(latitude: 47.6065, longitude: 12.8977), elevation: 670, distanceFromStart: 0.0, estimatedMinutesFromStart: 0, isSummit: false),
+                Waypoint(name: "Watzmannhaus", coordinate: CLLocationCoordinate2D(latitude: 47.5705, longitude: 12.9360), elevation: 1928, distanceFromStart: 5.6, estimatedMinutesFromStart: 150, isSummit: false),
+                Waypoint(name: "Hocheck (2651m)", coordinate: CLLocationCoordinate2D(latitude: 47.5621, longitude: 12.9289), elevation: 2651, distanceFromStart: 9.2, estimatedMinutesFromStart: 270, isSummit: false),
+                Waypoint(name: "Watzmann Mittelspitze Summit", coordinate: CLLocationCoordinate2D(latitude: 47.5539, longitude: 12.9222), elevation: 2713, distanceFromStart: 11.0, estimatedMinutesFromStart: 330, isSummit: true)
+            ]
+        ),
+        Mountain(
+            name: "Hochwanner",
+            elevation: 2744,
+            range: "Wetterstein Mountains",
+            country: "Germany",
+            coordinate: CLLocationCoordinate2D(latitude: 47.3942, longitude: 11.0475),
+            waypoints: [
+                Waypoint(name: "Trailhead - Ehrwald", coordinate: CLLocationCoordinate2D(latitude: 47.4050, longitude: 10.9350), elevation: 994, distanceFromStart: 0.0, estimatedMinutesFromStart: 0, isSummit: false),
+                Waypoint(name: "Hochwanner Saddle", coordinate: CLLocationCoordinate2D(latitude: 47.4000, longitude: 11.0200), elevation: 2200, distanceFromStart: 7.8, estimatedMinutesFromStart: 210, isSummit: false),
+                Waypoint(name: "Hochwanner Summit", coordinate: CLLocationCoordinate2D(latitude: 47.3942, longitude: 11.0475), elevation: 2744, distanceFromStart: 11.5, estimatedMinutesFromStart: 300, isSummit: true)
+            ]
+        ),
+        Mountain(
+            name: "Leutascher Dreitorspitze",
+            elevation: 2682,
+            range: "Wetterstein Mountains",
+            country: "Germany",
+            coordinate: CLLocationCoordinate2D(latitude: 47.4103, longitude: 11.0506),
+            waypoints: [
+                Waypoint(name: "Trailhead - Leutasch", coordinate: CLLocationCoordinate2D(latitude: 47.3845, longitude: 11.1459), elevation: 1136, distanceFromStart: 0.0, estimatedMinutesFromStart: 0, isSummit: false),
+                Waypoint(name: "Erlsattel", coordinate: CLLocationCoordinate2D(latitude: 47.3960, longitude: 11.0870), elevation: 2240, distanceFromStart: 5.2, estimatedMinutesFromStart: 180, isSummit: false),
+                Waypoint(name: "Dreitorspitze Summit", coordinate: CLLocationCoordinate2D(latitude: 47.4103, longitude: 11.0506), elevation: 2682, distanceFromStart: 7.8, estimatedMinutesFromStart: 240, isSummit: true)
+            ]
+        ),
+        Mountain(
+            name: "Hochfrottspitze",
+            elevation: 2649,
+            range: "Allgäu Alps",
+            country: "Germany",
+            coordinate: CLLocationCoordinate2D(latitude: 47.3000, longitude: 10.2786),
+            waypoints: [
+                Waypoint(name: "Trailhead - Oberstdorf", coordinate: CLLocationCoordinate2D(latitude: 47.4083, longitude: 10.2786), elevation: 814, distanceFromStart: 0.0, estimatedMinutesFromStart: 0, isSummit: false),
+                Waypoint(name: "Rappenseehütte", coordinate: CLLocationCoordinate2D(latitude: 47.3300, longitude: 10.2600), elevation: 2091, distanceFromStart: 8.4, estimatedMinutesFromStart: 240, isSummit: false),
+                Waypoint(name: "Hochfrottspitze Summit", coordinate: CLLocationCoordinate2D(latitude: 47.3000, longitude: 10.2786), elevation: 2649, distanceFromStart: 12.5, estimatedMinutesFromStart: 330, isSummit: true)
+            ]
+        ),
 
         // Swiss Alps
         Mountain(
@@ -135,8 +180,30 @@ extension Mountain {
                 Waypoint(name: "Summit - Mont Blanc", coordinate: CLLocationCoordinate2D(latitude: 45.8326, longitude: 6.8651), elevation: 4808, distanceFromStart: 13.8, estimatedMinutesFromStart: 480, isSummit: true)
             ]
         ),
-        Mountain(name: "Barre des Écrins", elevation: 4102, range: "Écrins Massif", country: "France", coordinate: CLLocationCoordinate2D(latitude: 44.9172, longitude: 6.3575)),
-        Mountain(name: "Grand Casse", elevation: 3855, range: "Vanoise Massif", country: "France", coordinate: CLLocationCoordinate2D(latitude: 45.4183, longitude: 6.7553)),
+        Mountain(
+            name: "Barre des Écrins",
+            elevation: 4102,
+            range: "Écrins Massif",
+            country: "France",
+            coordinate: CLLocationCoordinate2D(latitude: 44.9172, longitude: 6.3575),
+            waypoints: [
+                Waypoint(name: "Trailhead - La Bérarde", coordinate: CLLocationCoordinate2D(latitude: 44.9253, longitude: 6.3154), elevation: 1738, distanceFromStart: 0.0, estimatedMinutesFromStart: 0, isSummit: false),
+                Waypoint(name: "Refuge Adèle Planchard", coordinate: CLLocationCoordinate2D(latitude: 44.9206, longitude: 6.3319), elevation: 3173, distanceFromStart: 4.1, estimatedMinutesFromStart: 210, isSummit: false),
+                Waypoint(name: "Barre des Écrins Summit", coordinate: CLLocationCoordinate2D(latitude: 44.9172, longitude: 6.3575), elevation: 4102, distanceFromStart: 7.8, estimatedMinutesFromStart: 420, isSummit: true)
+            ]
+        ),
+        Mountain(
+            name: "Grand Casse",
+            elevation: 3855,
+            range: "Vanoise Massif",
+            country: "France",
+            coordinate: CLLocationCoordinate2D(latitude: 45.4183, longitude: 6.7553),
+            waypoints: [
+                Waypoint(name: "Trailhead - Pralognan-la-Vanoise", coordinate: CLLocationCoordinate2D(latitude: 45.3877, longitude: 6.7228), elevation: 1418, distanceFromStart: 0.0, estimatedMinutesFromStart: 0, isSummit: false),
+                Waypoint(name: "Refuge de la Vanoise", coordinate: CLLocationCoordinate2D(latitude: 45.3862, longitude: 6.8007), elevation: 2517, distanceFromStart: 6.2, estimatedMinutesFromStart: 180, isSummit: false),
+                Waypoint(name: "Grand Casse Summit", coordinate: CLLocationCoordinate2D(latitude: 45.4183, longitude: 6.7553), elevation: 3855, distanceFromStart: 13.1, estimatedMinutesFromStart: 360, isSummit: true)
+            ]
+        ),
 
         // Austrian Alps
         Mountain(
@@ -152,11 +219,44 @@ extension Mountain {
                 Waypoint(name: "Großglockner Summit", coordinate: CLLocationCoordinate2D(latitude: 47.0745, longitude: 12.6939), elevation: 3798, distanceFromStart: 13.0, estimatedMinutesFromStart: 310, isSummit: true)
             ]
         ),
-        Mountain(name: "Wildspitze", elevation: 3770, range: "Ötztal Alps", country: "Austria", coordinate: CLLocationCoordinate2D(latitude: 46.8853, longitude: 10.8675)),
-        Mountain(name: "Großvenediger", elevation: 3657, range: "Hohe Tauern", country: "Austria", coordinate: CLLocationCoordinate2D(latitude: 47.1089, longitude: 12.3456)),
+        Mountain(
+            name: "Wildspitze",
+            elevation: 3770,
+            range: "Ötztal Alps",
+            country: "Austria",
+            coordinate: CLLocationCoordinate2D(latitude: 46.8853, longitude: 10.8675),
+            waypoints: [
+                Waypoint(name: "Trailhead - Vent", coordinate: CLLocationCoordinate2D(latitude: 46.8527, longitude: 10.9050), elevation: 1895, distanceFromStart: 0.0, estimatedMinutesFromStart: 0, isSummit: false),
+                Waypoint(name: "Breslauer Hütte", coordinate: CLLocationCoordinate2D(latitude: 46.8631, longitude: 10.9050), elevation: 2844, distanceFromStart: 4.0, estimatedMinutesFromStart: 120, isSummit: false),
+                Waypoint(name: "Wildspitze Summit", coordinate: CLLocationCoordinate2D(latitude: 46.8853, longitude: 10.8675), elevation: 3770, distanceFromStart: 8.2, estimatedMinutesFromStart: 270, isSummit: true)
+            ]
+        ),
+        Mountain(
+            name: "Großvenediger",
+            elevation: 3657,
+            range: "Hohe Tauern",
+            country: "Austria",
+            coordinate: CLLocationCoordinate2D(latitude: 47.1089, longitude: 12.3456),
+            waypoints: [
+                Waypoint(name: "Trailhead - Innergschlöss", coordinate: CLLocationCoordinate2D(latitude: 47.0985, longitude: 12.3800), elevation: 1680, distanceFromStart: 0.0, estimatedMinutesFromStart: 0, isSummit: false),
+                Waypoint(name: "Kürsinger Hütte", coordinate: CLLocationCoordinate2D(latitude: 47.1140, longitude: 12.4300), elevation: 2558, distanceFromStart: 5.3, estimatedMinutesFromStart: 150, isSummit: false),
+                Waypoint(name: "Großvenediger Summit", coordinate: CLLocationCoordinate2D(latitude: 47.1089, longitude: 12.3456), elevation: 3657, distanceFromStart: 10.1, estimatedMinutesFromStart: 300, isSummit: true)
+            ]
+        ),
 
         // Italian Alps (Dolomites etc.)
-        Mountain(name: "Marmolada", elevation: 3343, range: "Dolomites", country: "Italy", coordinate: CLLocationCoordinate2D(latitude: 46.4356, longitude: 11.8500)),
+        Mountain(
+            name: "Marmolada",
+            elevation: 3343,
+            range: "Dolomites",
+            country: "Italy",
+            coordinate: CLLocationCoordinate2D(latitude: 46.4356, longitude: 11.8500),
+            waypoints: [
+                Waypoint(name: "Trailhead - Malga Ciapela", coordinate: CLLocationCoordinate2D(latitude: 46.4497, longitude: 11.8726), elevation: 1446, distanceFromStart: 0.0, estimatedMinutesFromStart: 0, isSummit: false),
+                Waypoint(name: "Rifugio Pian dei Fiacconi", coordinate: CLLocationCoordinate2D(latitude: 46.4420, longitude: 11.8615), elevation: 2626, distanceFromStart: 3.2, estimatedMinutesFromStart: 120, isSummit: false),
+                Waypoint(name: "Marmolada Summit (Punta Penia)", coordinate: CLLocationCoordinate2D(latitude: 46.4356, longitude: 11.8500), elevation: 3343, distanceFromStart: 5.8, estimatedMinutesFromStart: 240, isSummit: true)
+            ]
+        ),
         Mountain(
             name: "Gran Paradiso",
             elevation: 4061,
@@ -169,7 +269,18 @@ extension Mountain {
                 Waypoint(name: "Summit - Gran Paradiso", coordinate: CLLocationCoordinate2D(latitude: 45.5186, longitude: 7.2669), elevation: 4061, distanceFromStart: 9.2, estimatedMinutesFromStart: 330, isSummit: true)
             ]
         ),
-        Mountain(name: "Ortler", elevation: 3905, range: "Ortler Alps", country: "Italy", coordinate: CLLocationCoordinate2D(latitude: 46.5058, longitude: 10.5403)),
+        Mountain(
+            name: "Ortler",
+            elevation: 3905,
+            range: "Ortler Alps",
+            country: "Italy",
+            coordinate: CLLocationCoordinate2D(latitude: 46.5058, longitude: 10.5403),
+            waypoints: [
+                Waypoint(name: "Trailhead - Trafoi", coordinate: CLLocationCoordinate2D(latitude: 46.5408, longitude: 10.5386), elevation: 1542, distanceFromStart: 0.0, estimatedMinutesFromStart: 0, isSummit: false),
+                Waypoint(name: "Payer Hütte", coordinate: CLLocationCoordinate2D(latitude: 46.5172, longitude: 10.5267), elevation: 3029, distanceFromStart: 4.8, estimatedMinutesFromStart: 210, isSummit: false),
+                Waypoint(name: "Ortler Summit", coordinate: CLLocationCoordinate2D(latitude: 46.5058, longitude: 10.5403), elevation: 3905, distanceFromStart: 6.9, estimatedMinutesFromStart: 300, isSummit: true)
+            ]
+        ),
 
         // Additional Swiss peaks
         Mountain(

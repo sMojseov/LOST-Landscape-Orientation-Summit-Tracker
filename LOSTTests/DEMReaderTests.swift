@@ -49,11 +49,12 @@ struct DEMReaderTests {
     // MARK: - Bearing calculation
 
     @Test func azimuthZermattToMatterhorn() {
+        // Matterhorn is WSW of Zermatt — computed bearing ≈ 235° (matches GeometryTests reference)
         let from = CLLocationCoordinate2D(latitude: 46.0207, longitude: 7.7491)
         let to = CLLocationCoordinate2D(latitude: 45.9765, longitude: 7.6585)
         let bearing = PeakFinderService.calculateAzimuth(from: from, to: to)
-        #expect(bearing > 190)
-        #expect(bearing < 230)
+        #expect(bearing > 220)
+        #expect(bearing < 255)
     }
 
     @Test func azimuthDueNorth() {
