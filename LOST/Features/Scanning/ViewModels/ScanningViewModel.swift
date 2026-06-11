@@ -353,36 +353,27 @@ class ScanningViewModel: ObservableObject {
             return abs(delta) < 45
         }
 
-        // Confidence scoring — weighted multi-signal model
-        var score = 100.0
-
-        // GPS accuracy signal (40% weight)
+        // Confidence scoring — 5-signal weighted model (100 pts total)
         let horizAccuracy = location.horizontalAccuracy
-        if horizAccuracy > 20  { score -= 15 }
-        if horizAccuracy > 50  { score -= 20 }
+        let gpsScore: Double = horizAccuracy <= 20 ? 40 : horizAccuracy <= 50 ? 25 : 10
 
-        // Gyro stability signal (35% weight)
         let stability = abs(self.deviceRoll) + abs(self.devicePitch)
-        if stability > 10 { score -= 10 }
-        if stability > 20 { score -= 15 }
+        let gyroScore: Double = stability <= 10 ? 35 : stability <= 20 ? 20 : 5
 
-        // Vision saliency signal
-        if !visionEngine.saliencyFound { score -= 10 }
+        let compassScore: Double = heading.headingAccuracy <= 20 ? 15 : 8
 
-        // Heading accuracy signal
-        if heading.headingAccuracy > 20 { score -= 10 }
+        let visionScore: Double = visionEngine.saliencyFound ? 5 : 0
 
-        // Skyline match bonus: high-quality match adds confidence
-        // Low-quality match (unreliable correction) slightly penalises
+        var skylineScore: Double = 0
         if demIsAvailable {
             if skylineMatchQuality >= 0.6 {
-                score += 10
+                skylineScore = 5
             } else if skylineMatchQuality < 0.2 {
-                score -= 5
+                skylineScore = -5
             }
         }
 
-        self.confidenceScore = max(0, min(100, score))
+        self.confidenceScore = max(0, min(100, gpsScore + gyroScore + compassScore + visionScore + skylineScore))
     }
 
     deinit {
