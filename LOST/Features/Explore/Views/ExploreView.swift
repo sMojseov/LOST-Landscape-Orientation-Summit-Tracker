@@ -14,7 +14,7 @@ struct ExploreView: View {
     @StateObject private var locationManager = LocationManager()
     @State private var searchText = ""
     @State private var isSearching = false
-    @State private var selectedFilter = "All"
+    @AppStorage("selectedFilter") private var selectedFilter = "All"
     @State var nearbyNote: String = ""
 
     let filters = ["All", "4000m+", "Nearby", "Saved"]
